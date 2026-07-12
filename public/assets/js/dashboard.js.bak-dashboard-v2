@@ -1,0 +1,317 @@
+let previousTraffic = null;
+
+async function loadDashboard()
+{
+    const dashboard =
+        await (await fetch('/api/dashboard.php?t=' + Date.now())).json();
+
+    const clients =
+        await (await fetch('/api/clients.php?t=' + Date.now())).json();
+
+    const traffic =
+        await (await fetch('/api/traffic.php?t=' + Date.now())).json();
+
+    const speedtest =
+        await (await fetch('/api/last_speedtest.php?t=' + Date.now())).json();
+
+    let wanDownload='-';
+    let wanUpload='-';
+    let vpnDownload='-';
+    let vpnUpload='-';
+
+    if(previousTraffic !== null)
+    {
+        const seconds = 5;
+
+        wanDownload =
+            (((traffic.wan.rx - previousTraffic.wan.rx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        wanUpload =
+            (((traffic.wan.tx - previousTraffic.wan.tx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        vpnDownload =
+            (((traffic.vpn.rx - previousTraffic.vpn.rx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        vpnUpload =
+            (((traffic.vpn.tx - previousTraffic.vpn.tx) * 8)
+            / seconds / 1000000).toFixed(2);
+    }
+
+    previousTraffic = traffic;
+
+    let vpnColor='#ef4444';
+    let vpnText='Getrennt';
+
+    if(dashboard.vpn.status === 'active')
+    {
+        vpnColor='#22c55e';
+        vpnText='Verbunden';
+    }
+
+    let speedtestHtml = `
+        <div class="card">
+            <div class="card-title">Letzter Speedtest</div>
+            <div class="card-value">Noch kein Test</div>
+        </div>
+    `;
+
+    if(speedtest.id)
+    {
+        speedtestHtml = `
+            <div class="card">
+                <div class="card-title">Letzter Speedtest</div>
+                <div class="card-value" style="font-size:18px">
+                    ${speedtest.created_at}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">VPN Download</div>
+                <div class="card-value">
+                    ${speedtest.download} Mbit/s
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">VPN Upload</div>
+                <div class="card-value">
+                    ${speedtest.upload} Mbit/s
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">VPN Ping</div>
+                <div class="card-value">
+                    ${speedtest.latency} ms
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('cards').innerHTML = `
+
+    <div class="section-title">VPN & Netzwerk</div>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="card-title">VPN Status</div>
+            <div class="card-value" style="color:${vpnColor}">
+                ${vpnText}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">VPN Laufzeit</div>
+            <div class="card-value">
+                ${dashboard.vpn.uptime ?? '-'}
+            </div>
+        </div>
+<div class="card">
+    <div class="card-title">Aktives Profil</div>
+    <div class="card-value" style="font-size:18px">
+        ${dashboard.vpn.profile}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">VPN Anbieter</div>
+    <div class="card-value" style="font-size:18px">
+        ${dashboard.vpn.provider}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">VPN Typ</div>
+    <div class="card-value">
+        ${dashboard.vpn.type}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">VPN Server</div>
+    <div class="card-value" style="font-size:16px">
+        ${dashboard.vpn.endpoint}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Modus</div>
+    <div class="card-value">
+        ${
+            dashboard.vpn.manual
+            ? 'Manuell gewählt'
+            : 'Automatisches Failover'
+        }
+    </div>
+</div>
+        <div class="card">
+            <div class="card-title">Deutsche Exit-IP</div>
+            <div class="card-value">
+                ${dashboard.vpn.exit_ip}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Latenz Deutschland</div>
+            <div class="card-value">
+                ${dashboard.network.server_ping} ms
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Internet-IP</div>
+            <div class="card-value">
+                ${dashboard.network.wan_ip}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Tunnel-IP</div>
+            <div class="card-value">
+                ${dashboard.network.vpn_ip}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Geräte Online</div>
+            <div class="card-value">
+                ${clients.online} / ${clients.count}
+            </div>
+        </div>
+
+        ${speedtestHtml}
+
+    </div>
+
+    <div class="section-title">System</div>
+
+    <div class="cards">
+
+        <div class="card">
+            <div class="card-title">WAN Download</div>
+            <div class="card-value">${wanDownload} Mbit/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">WAN Upload</div>
+            <div class="card-value">${wanUpload} Mbit/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">VPN Download</div>
+            <div class="card-value">${vpnDownload} Mbit/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">VPN Upload</div>
+            <div class="card-value">${vpnUpload} Mbit/s</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">CPU Auslastung</div>
+            <div class="card-value">${dashboard.system.cpu_load}</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">RAM Nutzung</div>
+            <div class="card-value">${dashboard.system.memory.percent}%</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Temperatur</div>
+            <div class="card-value">${dashboard.system.temperature} °C</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Systemlaufzeit</div>
+            <div class="card-value">${dashboard.system.uptime}</div>
+        </div>
+
+    </div>
+
+    <div class="section-title">Aktionen</div>
+
+    <div class="cards">
+
+        <div class="card action-card">
+            <button onclick="restartVPN()" class="action-button">
+                VPN neu starten
+            </button>
+        </div>
+
+        <div class="card action-card">
+            <button onclick="restartGateway()" class="action-button danger-button">
+                Gateway neu starten
+            </button>
+        </div>
+
+        <div class="card action-card">
+            <button onclick="runSpeedtest()" class="action-button">
+                Speedtest starten
+            </button>
+        </div>
+<div class="card action-card">
+    <button onclick="createBackup()" class="action-button">
+        Backup erstellen
+    </button>
+</div>
+    </div>
+    `;
+}
+
+async function runSpeedtest()
+{
+    alert('Speedtest wird gestartet. Dies kann bis zu einer Minute dauern.');
+
+    await fetch('/api/speedtest.php?t=' + Date.now());
+
+    await loadDashboard();
+
+    alert('Speedtest abgeschlossen.');
+}
+
+async function restartVPN()
+{
+    await fetch('/api/vpn_restart.php');
+    alert('VPN wird neu gestartet.');
+}
+
+async function restartGateway()
+{
+    await fetch('/api/reboot.php');
+    alert('Gateway wird neu gestartet.');
+}
+
+loadDashboard();
+setInterval(loadDashboard,5000);
+async function createBackup()
+{
+    alert(
+        'Backup wird erstellt.'
+    );
+
+    const response =
+        await fetch(
+            '/api/create_backup.php'
+        );
+
+    const result =
+        await response.json();
+
+    if(result.success)
+    {
+        alert(
+            'Backup erfolgreich erstellt.'
+        );
+    }
+    else
+    {
+        alert(
+            'Backup fehlgeschlagen.'
+        );
+    }
+}

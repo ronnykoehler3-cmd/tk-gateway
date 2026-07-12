@@ -1,0 +1,314 @@
+let previousTraffic = null;
+
+async function loadDashboard()
+{
+    const dashboard =
+        await (await fetch('/api/dashboard.php?t='+Date.now())).json();
+
+    const clients =
+        await (await fetch('/api/clients.php?t='+Date.now())).json();
+
+    const traffic =
+        await (await fetch('/api/traffic.php?t='+Date.now())).json();
+
+    const speedtest =
+        await (await fetch('/api/last_speedtest.php?t='+Date.now())).json();
+
+    let wanDownload='-';
+    let wanUpload='-';
+    let vpnDownload='-';
+    let vpnUpload='-';
+
+    if(previousTraffic !== null)
+    {
+        const seconds = 5;
+
+        wanDownload =
+            (((traffic.wan.rx - previousTraffic.wan.rx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        wanUpload =
+            (((traffic.wan.tx - previousTraffic.wan.tx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        vpnDownload =
+            (((traffic.vpn.rx - previousTraffic.vpn.rx) * 8)
+            / seconds / 1000000).toFixed(2);
+
+        vpnUpload =
+            (((traffic.vpn.tx - previousTraffic.vpn.tx) * 8)
+            / seconds / 1000000).toFixed(2);
+    }
+
+    previousTraffic = traffic;
+
+    let vpnColor='#ef4444';
+    let vpnText='Getrennt';
+
+    if(dashboard.vpn.status === 'active')
+    {
+        vpnColor='#22c55e';
+        vpnText='Verbunden';
+    }
+
+    let manual='Nein';
+
+    if(dashboard.vpn.manual)
+    {
+        manual='Ja';
+    }
+
+    document.getElementById('cards').innerHTML = `
+
+<div class="section-title">VPN Übersicht</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">VPN Status</div>
+<div class="card-value" style="color:${vpnColor}">
+${vpnText}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Aktives Profil</div>
+<div class="card-value">
+${dashboard.vpn.profile}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Provider</div>
+<div class="card-value">
+${dashboard.vpn.provider}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Exit IP</div>
+<div class="card-value">
+${dashboard.vpn.exit_ip}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">VPN Laufzeit</div>
+<div class="card-value">
+${dashboard.vpn.uptime}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Manuell gewählt</div>
+<div class="card-value">
+${manual}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">WAN IP</div>
+<div class="card-value">
+${dashboard.network.wan_ip}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Tunnel IP</div>
+<div class="card-value">
+${dashboard.network.vpn_ip}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Deutschland Ping</div>
+<div class="card-value">
+${dashboard.network.server_ping} ms
+</div>
+</div>
+
+</div>
+
+<div class="section-title">Clients & Netzwerk</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">Clients Online</div>
+<div class="card-value">
+${clients.online} / ${clients.count}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">WAN Download</div>
+<div class="card-value">
+${wanDownload} Mbit/s
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">WAN Upload</div>
+<div class="card-value">
+${wanUpload} Mbit/s
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">VPN Download</div>
+<div class="card-value">
+${vpnDownload} Mbit/s
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">VPN Upload</div>
+<div class="card-value">
+${vpnUpload} Mbit/s
+</div>
+</div>
+
+</div>
+
+<div class="section-title">System</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">CPU Last</div>
+<div class="card-value">
+${dashboard.system.cpu_load}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">RAM Nutzung</div>
+<div class="card-value">
+${dashboard.system.memory.percent}%
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Temperatur</div>
+<div class="card-value">
+${dashboard.system.temperature} °C
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Laufzeit</div>
+<div class="card-value">
+${dashboard.system.uptime}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Hostname</div>
+<div class="card-value">
+${dashboard.system.hostname}
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Hardware</div>
+<div class="card-value">
+${dashboard.system.model}
+</div>
+</div>
+
+</div>
+
+<div class="section-title">Letzter Speedtest</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">Download</div>
+<div class="card-value">
+${speedtest.download ?? '-'} Mbit/s
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Upload</div>
+<div class="card-value">
+${speedtest.upload ?? '-'} Mbit/s
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Ping</div>
+<div class="card-value">
+${speedtest.latency ?? '-'} ms
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Server</div>
+<div class="card-value">
+${speedtest.server ?? '-'}
+</div>
+</div>
+
+</div>
+
+<div class="section-title">Aktionen</div>
+
+<div class="cards">
+
+<div class="card action-card">
+<button onclick="restartVPN()" class="action-button">
+VPN Neustart
+</button>
+</div>
+
+<div class="card action-card">
+<button onclick="runSpeedtest()" class="action-button">
+Speedtest starten
+</button>
+</div>
+
+<div class="card action-card">
+<button onclick="createBackup()" class="action-button">
+Backup erstellen
+</button>
+</div>
+
+<div class="card action-card">
+<button onclick="restartGateway()" class="action-button danger-button">
+Gateway Neustart
+</button>
+</div>
+
+</div>
+`;
+}
+
+async function restartVPN()
+{
+    await fetch('/api/vpn_restart.php');
+    alert('VPN wird neu gestartet.');
+}
+
+async function restartGateway()
+{
+    await fetch('/api/reboot.php');
+    alert('Gateway wird neu gestartet.');
+}
+
+async function runSpeedtest()
+{
+    alert('Speedtest läuft...');
+    await fetch('/api/speedtest.php');
+    await loadDashboard();
+    alert('Speedtest abgeschlossen.');
+}
+
+async function createBackup()
+{
+    await fetch('/api/create_backup.php');
+    alert('Backup erstellt.');
+}
+
+loadDashboard();
+setInterval(loadDashboard,5000);

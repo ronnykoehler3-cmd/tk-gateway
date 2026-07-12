@@ -1,29 +1,63 @@
-﻿# Allgemein
-.DS_Store
-Thumbs.db
-*.log
-*.tmp
-*.bak
-
-# Windows
-desktop.ini
-$RECYCLE.BIN/
-
-# VS Code
-.vscode/
-
-# PHP
-vendor/
-
-# Node
-node_modules/
-
-# Build
-dist/
-build/
-target/
-
-# Environment
+﻿# Produktive Konfigurationen
 .env
-.env.local
+.env.*
+!.env.example
 
+config.php
+config.json
+!config.example.php
+!config.example.json
+
+# Schlüssel und Zertifikate
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Datenbanken
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.sql.gz
+
+# VPN-Konfigurationen
+vpn-profiles/
+vpn-imports/
+amnezia/
+wireguard/
+sing-box/config.json
+
+# Backups und Exporte
+backups/
+backup/
+exports/
+config-export/
+downloads/
+uploads/
+
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.img
+*.img.gz
+
+# Laufzeitdaten
+logs/
+storage/*
+!storage/.gitkeep
+
+*.bak
+*.backup
+*.log
+*.pid
+*.sock
+
+# Entwicklungsumgebungen
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
