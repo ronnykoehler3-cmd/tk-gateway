@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../../app/classes/Clients.php';
-require_once __DIR__ . '/../../app/classes/DeviceRegistry.php';
+require_once __DIR__ . '/../app/classes/Clients.php';
+require_once __DIR__ . '/../app/classes/DeviceRegistry.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
