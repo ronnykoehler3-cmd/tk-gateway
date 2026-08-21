@@ -1,5 +1,22 @@
 # Changelog - tk-gateway
 
+## 2026-08-21 – zentrale Geräteverwaltung umgesetzt
+
+- zentrale persistente Geräte-Registry unter `/var/lib/tk-gateway/devices.json` ergänzt
+- DHCP-/ARP-Erkennung wird automatisch mit der zentralen Registry zusammengeführt
+- MAC-Adresse ist die eindeutige Geräte-ID
+- neu erkannte DHCP-Geräte werden automatisch in den gemeinsamen Gerätebestand übernommen
+- verwaltete Geräte bleiben auch ohne aktuellen Lease sichtbar
+- gemeinsame Felder: Anzeigename, Hostname, Gerätetyp, Rufnummer/Nebenstelle, IP, MAC und Bemerkung
+- Clients-Seite zur Bearbeitungsoberfläche erweitert
+- Option `Feste IP` direkt bei der IP-Adresse ergänzt
+- feste IPs werden als dnsmasq-Reservierungen erzeugt
+- doppelte feste IP-Adressen werden beim Speichern blockiert
+- Entfernen des Hakens `Feste IP` entfernt die Reservierung beim nächsten Anwenden
+- dnsmasq-Konfiguration wird vor Reload mit `dnsmasq --test` validiert
+- privilegierter Helper und enger sudoers-Eintrag für die DHCP-Reservierungen ergänzt
+- zentrale Clients-API liefert denselben Gerätebestand für weitere Ansichten wie Fernwartung und Geräteverwaltung
+
 ## 2026-08-21 – aktueller Projektstand dokumentiert
 
 - Raspberry Pi 5 als Gateway für den Standort Ägypten dokumentiert
