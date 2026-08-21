@@ -1,4 +1,5 @@
 let currentClients = [];
+let clientEditorOpen = false;
 
 function esc(value) {
     return String(value ?? '')
@@ -10,6 +11,8 @@ function esc(value) {
 }
 
 async function loadClients() {
+    if (clientEditorOpen) return;
+
     try {
         const response = await fetch('/api/clients.php?t=' + Date.now(), {cache: 'no-store'});
         const data = await response.json();
@@ -55,9 +58,19 @@ async function loadClients() {
     }
 }
 
+function closeClientEditor() {
+    const editor = document.getElementById('client-editor');
+    if (editor) editor.innerHTML = '';
+    clientEditorOpen = false;
+    loadClients();
+}
+
 function editClient(index) {
     const c = currentClients[index];
     if (!c) return;
+
+    clientEditorOpen = true;
+
     document.getElementById('client-editor').innerHTML = `
       <div class="card" style="margin-top:18px;max-width:850px;">
         <h2>Gerät bearbeiten</h2>
@@ -79,7 +92,7 @@ function editClient(index) {
           <label style="display:block;margin-top:12px;">Bemerkung<br><textarea name="note" rows="3" style="width:100%">${esc(c.note)}</textarea></label>
           <div style="margin-top:12px;display:flex;gap:10px;">
             <button type="submit">Speichern</button>
-            <button type="button" onclick="document.getElementById('client-editor').innerHTML=''">Abbrechen</button>
+            <button type="button" onclick="closeClientEditor()">Abbrechen</button>
             <span id="device-save-status"></span>
           </div>
         </form>
@@ -115,6 +128,7 @@ async function saveClient(event) {
         const data = await response.json();
         if (!response.ok || !data.ok) throw new Error(data.error || 'Speichern fehlgeschlagen.');
         status.textContent = 'Gespeichert.';
+        clientEditorOpen = false;
         await loadClients();
     } catch (error) {
         status.textContent = 'Fehler: ' + (error.message || error);
@@ -122,4 +136,6 @@ async function saveClient(event) {
 }
 
 loadClients();
-setInterval(loadClients, 5000);
+setInterval(() => {
+    if (!clientEditorOpen) loadClients();
+}, 5000);
