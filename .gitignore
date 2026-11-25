@@ -61,3 +61,6 @@ storage/*
 .idea/
 Thumbs.db
 .DS_Store
+
+# Lokale Triple-WAN-Konfiguration
+triplewan.conf

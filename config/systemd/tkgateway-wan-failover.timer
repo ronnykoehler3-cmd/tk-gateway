@@ -1,0 +1,11 @@
+[Unit]
+Description=TK Gateway Triple-WAN Failover Timer
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5
+Persistent=true
+
+[Install]
+WantedBy=timers.target

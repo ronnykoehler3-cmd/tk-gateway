@@ -1,0 +1,8 @@
+add table inet tk_lan_guard
+delete table inet tk_lan_guard
+table inet tk_lan_guard {
+    chain forward {
+        type filter hook forward priority -10; policy accept;
+        iifname "eth1" oifname != "xraytun" counter drop
+    }
+}

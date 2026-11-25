@@ -1,0 +1,31 @@
+#!/bin/bash
+set -euo pipefail
+S=/var/lib/tkgateway-triplewan-live
+mode=$(cat "$S/manual")
+case "$mode" in
+    AUTO) exit 0 ;;
+    PRIMARY|BACKUP|LTE) ;;
+    *) exit 1 ;;
+esac
+
+source "$(dirname "${BASH_SOURCE[0]}")/tkgateway-wan-config.sh"
+
+mac=$(tk_config_get wan "${mode}_MAC")
+table=$(tk_config_get wan "${mode}_TABLE")
+xray_uid=$(tk_config_get vpn XRAY_UID)
+
+[[ "$mac" =~ ^([[:xdigit:]]{2}:){5}[[:xdigit:]]{2}$ ]] || exit 1
+[[ "$table" =~ ^[0-9]+$ ]] || exit 1
+[[ "$xray_uid" == 65534 ]] || exit 1
+
+case "$mode:$table" in
+    PRIMARY:201|BACKUP:202|LTE:203) ;;
+    *) exit 1 ;;
+esac
+dev=missing
+for p in /sys/class/net/*; do [[ $(cat "$p/address" 2>/dev/null) != "$mac" ]] || dev=${p##*/}; done
+# Atomic firewall replacement; IPv6 VPN egress disabled in manual mode.
+{ if nft list table inet tk_wan_manual >/dev/null 2>&1; then echo 'delete table inet tk_wan_manual'; fi; printf 'table inet tk_wan_manual { chain output { type filter hook output priority -10; policy accept; meta skuid 65534 oifname "lo" accept; meta skuid 65534 meta nfproto ipv6 reject; meta skuid 65534 oifname != "%s" reject; }; }\n' "$dev"; } | nft -f -
+# No fallback if selected table loses its default route.
+ip -4 rule show | grep -q '^191:' || ip -4 rule add pref 191 uidrange 65534-65534 prohibit
+if ! ip -4 rule show | grep -q '^190:'; then ip -4 rule add pref 190 uidrange 65534-65534 lookup "$table"; fi

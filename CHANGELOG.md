@@ -1,3 +1,13 @@
+## 2026-11-25 - Triple-WAN (Entwicklung)
+
+- Manuelle Auswahl und Sperrung der WAN-Leitung.
+- WAN-Steuerung im Dashboard und Netzwerkmenue.
+- Zentrale MAC-Konfiguration mit Validierung.
+- LAN-Firewall- und Routing-Killswitch vorbereitet.
+- Gemeinsamer Neustart von Xray und TUN vorbereitet.
+- Installationsmanifest, Vorpruefung und automatische Sicherung.
+- Installation, Rollback und Ausfalltests noch offen.
+
 # Changelog - tk-gateway
 
 ## 2026-08-21 – zentrale Geräteverwaltung umgesetzt

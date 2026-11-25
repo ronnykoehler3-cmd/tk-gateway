@@ -1,0 +1,1 @@
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/tkgateway-wan-control AUTO, /usr/local/sbin/tkgateway-wan-control PRIMARY, /usr/local/sbin/tkgateway-wan-control BACKUP, /usr/local/sbin/tkgateway-wan-control LTE

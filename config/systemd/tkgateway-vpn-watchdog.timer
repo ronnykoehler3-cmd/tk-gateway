@@ -1,0 +1,10 @@
+[Unit]
+Description=TK Gateway VLESS/Xray Watchdog Timer
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=30
+AccuracySec=5
+
+[Install]
+WantedBy=timers.target

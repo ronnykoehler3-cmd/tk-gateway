@@ -1,0 +1,8 @@
+[Unit]
+Description=TK Gateway Triple-WAN Failover
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/tkgateway-wan-failover.sh

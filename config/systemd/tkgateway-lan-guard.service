@@ -1,0 +1,12 @@
+[Unit]
+Description=TK Gateway LAN VPN Kill Switch
+After=nftables.service
+Before=xray.service tkgateway-xraytun.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f /etc/tkgateway/tk-lan-guard.nft
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

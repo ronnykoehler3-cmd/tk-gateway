@@ -1,0 +1,8 @@
+[Unit]
+Description=TK Gateway VLESS/Xray Watchdog
+After=network-online.target xray.service tkgateway-xraytun.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/tkgateway-vpn-watchdog.sh

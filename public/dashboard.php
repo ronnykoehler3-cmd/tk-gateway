@@ -3,6 +3,8 @@ include 'includes/header.php';
 ?>
 
 <h1>TK Gateway Dashboard</h1>
+<?php include __DIR__ . '/includes/wan-dashboard.php'; ?>
+
 
 <div id="cards"></div>
 

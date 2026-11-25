@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+S=/var/lib/tkgateway-triplewan-live
+exec 9>"$S/lock"; flock -w 60 9
+mode=$(cat "$S/manual")
+case "${1:-}" in
+ PRIMARY|BACKUP|LTE)
+ [[ $# == 1 && $mode == AUTO ]] || exit 1
+ printf '%s\n' "$1" > "$S/manual.tmp"; chmod 644 "$S/manual.tmp"; mv "$S/manual.tmp" "$S/manual"
+ if ! /usr/local/sbin/tkgateway-wan-guard; then echo AUTO > "$S/manual"; ip -4 rule del pref 190 2>/dev/null || :; ip -4 rule del pref 191 2>/dev/null || :; nft delete table inet tk_wan_manual 2>/dev/null || :; exit 1; fi
+ ;;
+ AUTO)
+ [[ $# == 1 ]] || exit 1
+ echo AUTO > "$S/manual"
+ ip -4 rule del pref 190 2>/dev/null || :; ip -4 rule del pref 191 2>/dev/null || :; nft delete table inet tk_wan_manual 2>/dev/null || :
+ ;;
+ *) exit 1;;
+esac
+flock -u 9
+systemctl --no-block start tkgateway-wan-failover.service
+systemctl --no-block restart xray.service tkgateway-xraytun.service
