@@ -1,0 +1,13 @@
+app/classes/SyslogAuth.php
+app/classes/SyslogDiagnose.php
+public/syslog.php
+public/syslog-login.php
+public/syslog-logout.php
+public/api/syslog.php
+public/assets/js/syslog.js
+public/assets/css/syslog.css
+public/includes/header.php
+scripts/install-syslog.sh
+scripts/tkgateway-syslog-journal
+config/sudoers/tkgateway-syslog
+config/logrotate/tk-gateway-syslog

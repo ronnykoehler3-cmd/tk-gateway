@@ -1,0 +1,28 @@
+name: Syslog module checks
+on:
+  push:
+    branches: [feature/syslog-diagnose-20261126]
+  pull_request:
+    branches: [feature/syslog-diagnose-20261126]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: PHP syntax and parser rules
+        run: |
+          find app/classes public -name '*.php' -print0 | xargs -0 -n1 php -l
+          php tests/test_syslog_parser.php
+      - name: Shell syntax and installer rollback
+        run: |
+          bash -n scripts/install-syslog.sh
+          bash -n scripts/tkgateway-syslog-journal
+          bash tests/test_syslog_installer.sh
+      - name: JavaScript syntax
+        run: node --check public/assets/js/syslog.js

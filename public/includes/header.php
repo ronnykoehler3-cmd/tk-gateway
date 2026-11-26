@@ -77,6 +77,13 @@ $current = basename($_SERVER['PHP_SELF']);
         </li>
 
         <li>
+            <a class="<?php echo $current=='syslog.php'?'active':''; ?>"
+               href="/syslog.php">
+                🩺 Syslog &amp; Fehlerdiagnose
+            </a>
+        </li>
+
+        <li>
             <a class="<?php echo $current=='maintenance.php'?'active':''; ?>"
                href="/maintenance.php">
                 🔧 Wartung

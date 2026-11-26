@@ -15,6 +15,7 @@ Das System stellt das lokale Netz bereit, verwaltet Clients und Geräte, routet 
 - lokaler SOCKS5-Port: `127.0.0.1:10808`
 - DHCP/DNS: dnsmasq
 - Weboberfläche zur Verwaltung von Gateway, Clients, Netzwerk, VPN, Ereignissen und Wartung
+- Syslog & Fehlerdiagnose mit geschützter Liveansicht für Telefonie-, VPN-, WAN- und Watchdog-Meldungen (Installationshinweise in `INSTALL.md`)
 
 ## VPN
 
