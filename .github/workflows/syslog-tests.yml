@@ -15,10 +15,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install logrotate validator
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes logrotate
       - name: PHP syntax and parser rules
         run: |
           find app/classes public -name '*.php' -print0 | xargs -0 -n1 php -l
           php tests/test_syslog_parser.php
+          php tests/test_syslog_access.php
+      - name: Logrotation configuration
+        run: logrotate --debug config/logrotate/tk-gateway-syslog
       - name: Shell syntax and installer rollback
         run: |
           bash -n scripts/install-syslog.sh

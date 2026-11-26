@@ -48,6 +48,7 @@ Die Regressionstests liegen unter `tests/`. Lokal können sie mit PHP 8.4, Bash 
 php -l app/classes/SyslogAuth.php
 php -l app/classes/SyslogDiagnose.php
 php tests/test_syslog_parser.php
+php tests/test_syslog_access.php
 bash -n scripts/install-syslog.sh
 bash tests/test_syslog_installer.sh
 node --check public/assets/js/syslog.js
