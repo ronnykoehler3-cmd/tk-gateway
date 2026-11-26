@@ -25,7 +25,9 @@ jobs:
           php tests/test_syslog_parser.php
           php tests/test_syslog_access.php
       - name: Logrotation configuration
-        run: sudo logrotate --debug config/logrotate/tk-gateway-syslog
+        run: |
+          sudo install -o root -g root -m 0644 config/logrotate/tk-gateway-syslog /tmp/tk-gateway-syslog-logrotate-test
+          sudo logrotate --debug /tmp/tk-gateway-syslog-logrotate-test
       - name: Shell syntax and installer rollback
         run: |
           bash -n scripts/install-syslog.sh
