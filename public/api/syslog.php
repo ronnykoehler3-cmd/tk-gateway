@@ -1,10 +1,22 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../../app/classes/SyslogDiagnose.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('X-Content-Type-Options: nosniff');
 try {
+    // In the repository the endpoint is public/api/syslog.php; on the
+    // Raspberry it is copied to the webroot as api/syslog.php. Support both.
+    $classFiles = [
+        __DIR__ . '/../app/classes/SyslogDiagnose.php',
+        __DIR__ . '/../../app/classes/SyslogDiagnose.php',
+    ];
+    $classFile = null;
+    foreach ($classFiles as $candidate) {
+        if (is_file($candidate)) { $classFile = $candidate; break; }
+    }
+    if ($classFile === null) throw new RuntimeException('Syslog-Diagnoseklasse fehlt.');
+    require_once $classFile;
+
     $period = max(0, min(168, (int)($_GET['hours'] ?? 24)));
     $filters = [
         'search' => substr(trim((string)($_GET['q'] ?? '')), 0, 480),
