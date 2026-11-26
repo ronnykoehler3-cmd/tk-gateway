@@ -15,16 +15,26 @@ final class SyslogDiagnose
         $items = [];
         foreach (self::SOURCES as $source => $meta) {
             $path = $meta['path'];
-            if (!is_readable($path) || !is_file($path)) {
-                continue;
-            }
-            $lines = self::tailLines($path, 2_000);
-            foreach ($lines as $line) {
-                $item = self::parse($line, $source, $meta['label']);
-                if (self::matches($item, $filters)) {
-                    // Mask secrets in both lay and expert views, and in exports.
-                    $item['message'] = self::mask($item['message']);
-                    $items[] = $item;
+            $archives = glob($path . '.*') ?: [];
+            $archives = array_values(array_filter($archives, static fn(string $candidate): bool =>
+                preg_match('/\.\d+(?:\.gz)?$/', $candidate) === 1 && is_file($candidate) && !is_link($candidate)
+            ));
+            usort($archives, static fn(string $a, string $b): int => (filemtime($b) ?: 0) <=> (filemtime($a) ?: 0));
+            $paths = array_merge([$path], $archives);
+            $remaining = 2_000;
+            foreach ($paths as $candidate) {
+                if ($remaining <= 0 || !is_readable($candidate) || !is_file($candidate) || is_link($candidate)) continue;
+                $since = (int)($filters['since'] ?? 0);
+                if ($candidate !== $path && $since > 0 && (filemtime($candidate) ?: 0) < $since) continue;
+                $lines = self::tailLines($candidate, $remaining);
+                $remaining -= count($lines);
+                foreach ($lines as $line) {
+                    $item = self::parse($line, $source, $meta['label']);
+                    if (self::matches($item, $filters)) {
+                        // Mask secrets in both lay and expert views, and in exports.
+                        $item['message'] = self::mask($item['message']);
+                        $items[] = $item;
+                    }
                 }
             }
         }
@@ -197,17 +207,21 @@ final class SyslogDiagnose
 
     private static function tailLines(string $path, int $limit): array
     {
-        $handle = @fopen($path, 'rb');
+        $compressed = str_ends_with($path, '.gz');
+        $handle = $compressed ? @gzopen($path, 'rb') : @fopen($path, 'rb');
         if (!$handle) return [];
-        $size = @filesize($path) ?: 0;
-        if ($size > 4_194_304) fseek($handle, -4_194_304, SEEK_END);
+        $size = $compressed ? 0 : (@filesize($path) ?: 0);
+        if (!$compressed && $size > 4_194_304) {
+            fseek($handle, -4_194_304, SEEK_END);
+            fgets($handle); // discard a possible partial first line
+        }
         $lines = [];
-        while (($line = fgets($handle)) !== false) {
+        while (($line = $compressed ? gzgets($handle) : fgets($handle)) !== false) {
             $line = trim($line);
             if ($line !== '') $lines[] = $line;
             if (count($lines) > $limit) array_shift($lines);
         }
-        fclose($handle);
+        $compressed ? gzclose($handle) : fclose($handle);
         return $lines;
     }
 
