@@ -87,8 +87,11 @@
       const response = await fetch('/api/syslog.php?' + filters(), { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } });
       if (!response.ok) throw new Error('HTTP ' + response.status);
       render(await response.json());
-    } catch (_) {
-      $('updated').textContent = 'Abruf fehlgeschlagen. Anmeldung oder Logzugriff prüfen.';
+    } catch (error) {
+      const status = /HTTP (\d+)/.exec(String(error?.message || ''));
+      $('updated').textContent = status
+        ? 'Syslog-API antwortet mit HTTP ' + status[1] + '. Logzugriff prüfen.'
+        : 'Syslog-API ist nicht erreichbar. Verbindung prüfen.';
     } finally { state.busy = false; }
   }
 
