@@ -78,8 +78,10 @@ final class SyslogDiagnose
         if (preg_match('/\b(?:fromhost-ip[=: ]+)?((?:\d{1,3}\.){3}\d{1,3})\b/', $hostname ?? '', $m)) {
             $senderIp = $m[1];
         }
-        if (preg_match('/\b([0-9a-f]{2}(?::[0-9a-f]{2}){5})\b/i', $line, $m)) {
-            $mac = strtoupper($m[1]);
+        // Grandstream firmware formats the address with spaces after each
+        // colon in syslog messages, for example "[ec: 74:d7:d8:e2:16]".
+        if (preg_match('/\b([0-9a-f]{2}(?:\s*:\s*[0-9a-f]{2}){5})\b/i', $line, $m)) {
+            $mac = strtoupper(preg_replace('/\s+/', '', $m[1]) ?? $m[1]);
         }
         if (preg_match('/\b(HT\s?-?841|HT\s?-?801|GRP\d{3,4}|GXP\d{3,4}|WP\d{3,4}|Fanvil\s+X\d+\w*|Yealink\s+T\d+\w*|FRITZ!?Box(?:\s+\d{3,4})?)\b/i', ($hostname ?? '') . ' ' . $line, $m)) {
             $model = preg_replace('/\s+/', ' ', strtoupper(str_replace('!', '', $m[1]))) ?: $m[1];
@@ -275,7 +277,7 @@ final class SyslogDiagnose
     {
         $normalized = strtolower($text);
         $normalized = preg_replace('/\b(?:\d{1,3}\.){3}\d{1,3}\b/', '<ip>', $normalized) ?? $normalized;
-        $normalized = preg_replace('/\b[0-9a-f]{2}(?::[0-9a-f]{2}){5}\b/i', '<mac>', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\b[0-9a-f]{2}(?:\s*:\s*[0-9a-f]{2}){5}\b/i', '<mac>', $normalized) ?? $normalized;
         $normalized = preg_replace('/\b\d{2,}\b/', '<n>', $normalized) ?? $normalized;
         return hash('sha256', preg_replace('/\s+/', ' ', trim($normalized)) ?? $normalized);
     }

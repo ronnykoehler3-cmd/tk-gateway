@@ -11,6 +11,9 @@ $normalChallenge = SyslogDiagnose::parse('Nov 26 22:34:05 HT841 [ec:74:d7:d8:e2:
 check($normalChallenge['severity'] === 'info', 'SIP 401 ohne fehlgeschlagene Registrierung muss normal sein');
 check($normalChallenge['model'] === 'HT841', 'HT841-Modell muss erkannt werden');
 check($normalChallenge['mac'] === 'EC:74:D7:D8:E2:16', 'MAC-Adresse muss erkannt werden');
+$grandstreamFormat = SyslogDiagnose::parse('Nov 26 22:34:05 HT841 [ec: 74:d7:d8:e2:16] SIP/2.0 401 Unauthorized', 'fritzbox');
+check($grandstreamFormat['model'] === 'HT841' && $grandstreamFormat['mac'] === 'EC:74:D7:D8:E2:16', 'Grandstream-MAC mit Leerzeichen nach Doppelpunkten muss normalisiert erkannt werden');
+check($grandstreamFormat['fingerprint'] === $normalChallenge['fingerprint'], 'MAC-Formatierung darf wiederkehrende Meldungen nicht aufteilen');
 $proxyChallenge = SyslogDiagnose::parse('Nov 26 22:34:05 HT841 SIP/2.0 407 Proxy Authentication Required', 'fritzbox');
 check($proxyChallenge['severity'] === 'info', 'SIP 407 ohne fehlgeschlagene Registrierung muss normal sein');
 

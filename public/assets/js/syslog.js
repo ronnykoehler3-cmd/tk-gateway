@@ -40,11 +40,11 @@
     if (!data.summary.devices.length) devices.append(item('p', 'muted', 'Für diesen Zeitraum liegen keine lesbaren Meldungen vor.'));
     data.summary.devices.forEach((device) => {
       const card = item('article', 'device-card ' + device.status);
-      const status = device.status === 'error' ? 'Fehler erkannt' : (device.status === 'warning' ? 'Warnung' : 'Keine bekannte Störung');
+      const status = device.status === 'error' ? 'Fehler im gewählten Zeitraum' : (device.status === 'warning' ? 'Warnungen im gewählten Zeitraum' : 'Keine bekannten Fehler im gewählten Zeitraum');
       card.append(item('h3', '', device.device), item('p', 'device-model', device.model || 'Modell nicht erkannt'));
       const stats = item('p', 'device-facts');
       stats.append(document.createTextNode('MAC: ' + esc(device.mac) + ' · ' + status));
-      card.append(stats, item('p', '', 'Letzte Meldung: ' + esc(device.lastMessage)), item('p', '', 'Zuletzt gesehen: ' + new Date(device.lastSeen).toLocaleString('de-DE')), item('p', '', 'Fehler: ' + device.errors + ' · Warnungen: ' + device.warnings));
+      card.append(stats, item('p', '', 'Letzte Meldung: ' + esc(device.lastMessage)), item('p', '', 'Zuletzt gesehen: ' + new Date(device.lastSeen).toLocaleString('de-DE')), item('p', '', 'Im gewählten Zeitraum: ' + device.errors + ' Fehler · ' + device.warnings + ' Warnungen'));
       devices.append(card);
     });
 
