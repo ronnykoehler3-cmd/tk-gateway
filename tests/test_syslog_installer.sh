@@ -17,6 +17,9 @@ cat > "$TEST_ROOT/var/www/tkgateway/includes/header.php" <<'PHP'
 PHP
 printf 'bestehende Meldung 1\nbestehende Meldung 2\n' > "$TEST_ROOT/var/log/tkgateway/fritzbox.log"
 printf "<?php\nreturn 'existing-password-hash';\n" > "$TEST_ROOT/etc/tkgateway/syslog-auth.php"
+printf '<?php // alte Anmeldung\n' > "$TEST_ROOT/var/www/tkgateway/syslog-login.php"
+printf '<?php // alter Logout\n' > "$TEST_ROOT/var/www/tkgateway/syslog-logout.php"
+printf '<?php // alter Authenticator\n' > "$TEST_ROOT/var/www/tkgateway/app/classes/SyslogAuth.php"
 
 cat > "$BIN/install" <<'SH'
 #!/usr/bin/env bash
@@ -50,6 +53,10 @@ export TK_SYSLOG_TEST_ROOT="$TEST_ROOT"
 BACKUP="$(sed -n 's/^Sicherung erstellt: //p' "$TEST_ROOT/install1.out")"
 [[ -d "$BACKUP" ]]
 [[ -f "$TEST_ROOT/var/www/tkgateway/syslog.php" ]]
+[[ ! -e "$TEST_ROOT/var/www/tkgateway/syslog-login.php" ]]
+[[ ! -e "$TEST_ROOT/var/www/tkgateway/syslog-logout.php" ]]
+[[ ! -e "$TEST_ROOT/var/www/tkgateway/app/classes/SyslogAuth.php" ]]
+[[ ! -e "$TEST_ROOT/etc/tkgateway/syslog-auth.php" ]]
 [[ "$(grep -c 'href="/syslog.php"' "$TEST_ROOT/var/www/tkgateway/includes/header.php")" -eq 1 ]]
 
 "$REPO/scripts/install-syslog.sh" --install > "$TEST_ROOT/install2.out"
@@ -64,4 +71,7 @@ grep -q 'size 10M' "$TEST_ROOT/etc/logrotate.d/tk-gateway-syslog"
 [[ ! -e "$TEST_ROOT/var/www/tkgateway/syslog.php" ]]
 [[ "$(grep -c 'href="/syslog.php"' "$TEST_ROOT/var/www/tkgateway/includes/header.php" || true)" -eq 0 ]]
 grep -q 'bestehende Meldung 2' "$TEST_ROOT/var/log/tkgateway/fritzbox.log"
+[[ -f "$TEST_ROOT/var/www/tkgateway/syslog-login.php" ]]
+[[ -f "$TEST_ROOT/var/www/tkgateway/app/classes/SyslogAuth.php" ]]
+[[ -f "$TEST_ROOT/etc/tkgateway/syslog-auth.php" ]]
 echo 'OK: Installation wiederholbar, Menü gezielt ergänzt, vorhandene Syslog-Meldungen erhalten, Rollback stellt Stand wieder her.'

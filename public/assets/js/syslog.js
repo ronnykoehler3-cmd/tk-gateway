@@ -85,7 +85,6 @@
     state.busy = true;
     try {
       const response = await fetch('/api/syslog.php?' + filters(), { credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } });
-      if (response.status === 401) { window.location.assign('/syslog-login.php'); return; }
       if (!response.ok) throw new Error('HTTP ' + response.status);
       render(await response.json());
     } catch (_) {

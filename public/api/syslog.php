@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../../app/classes/SyslogAuth.php';
 require_once __DIR__ . '/../../app/classes/SyslogDiagnose.php';
-SyslogAuth::requireLogin(true);
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('X-Content-Type-Options: nosniff');
 try {
     $period = max(0, min(168, (int)($_GET['hours'] ?? 24)));
     $filters = [

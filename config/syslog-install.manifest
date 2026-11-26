@@ -1,8 +1,5 @@
-app/classes/SyslogAuth.php
 app/classes/SyslogDiagnose.php
 public/syslog.php
-public/syslog-login.php
-public/syslog-logout.php
 public/api/syslog.php
 public/assets/js/syslog.js
 public/assets/css/syslog.css

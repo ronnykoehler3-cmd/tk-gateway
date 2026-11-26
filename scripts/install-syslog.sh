@@ -19,6 +19,8 @@ SUDOERS_DIR="${TEST_ROOT:+$TEST_ROOT}/etc/sudoers.d"
 SUDOERS_DIR="${SUDOERS_DIR:-/etc/sudoers.d}"
 LOCAL_SBIN="${TEST_ROOT:+$TEST_ROOT}/usr/local/sbin"
 LOCAL_SBIN="${LOCAL_SBIN:-/usr/local/sbin}"
+# Legacy locations from the previous password-protected build. They are
+# backed up before removal so rollback can restore that build exactly.
 SYSLOG_AUTH="$ETC_DIR/syslog-auth.php"
 ROTATION="$LOGROTATE_DIR/tk-gateway-syslog"
 RSYSLOG_DROPIN="$RSYSLOG_DIR/60-tkgateway-syslog.conf"
@@ -42,7 +44,6 @@ preflight() {
     [[ -f "$WEBROOT/includes/header.php" ]] || { echo 'FEHLER: Produktive Menüdatei includes/header.php fehlt.' >&2; return 1; }
     [[ ! -L "$LOGFILE" && ! -L "$WATCHDOG_LOG" && ! -L "$SYSLOG_AUTH" ]] || { echo 'FEHLER: Log- oder Passwortdatei darf kein symbolischer Link sein.' >&2; return 1; }
     [[ -f "$LOGFILE" || -d "$(dirname "$LOGFILE")" ]] || { echo 'FEHLER: Logverzeichnis fehlt.' >&2; return 1; }
-    [[ -f "$SYSLOG_AUTH" || -t 0 || -r /dev/tty ]] || { echo 'FEHLER: Für das erste Passwort ist eine interaktive Eingabe erforderlich.' >&2; return 1; }
 
     while read -r src; do
         [[ -f "$REPO/$src" ]] || { echo "FEHLER: Quelldatei fehlt: $src" >&2; return 1; }
@@ -89,27 +90,6 @@ backup_all() {
     echo "Sicherung erstellt: $BACKUP"
 }
 
-set_password_if_needed() {
-    [[ -f "$SYSLOG_AUTH" ]] && { echo 'Vorhandenes Syslog-Passwort bleibt erhalten.'; return; }
-    local first second hash
-    if [[ -n "${TK_SYSLOG_PASSWORD:-}" ]]; then
-        first="$TK_SYSLOG_PASSWORD"; second="$TK_SYSLOG_PASSWORD"
-    else
-        [[ -r /dev/tty ]] || { echo 'FEHLER: Passwort kann ohne Terminal nicht abgefragt werden.' >&2; return 1; }
-        read -r -s -p 'Neues Syslog-Passwort (mindestens 12 Zeichen): ' first </dev/tty; echo
-        read -r -s -p 'Passwort wiederholen: ' second </dev/tty; echo
-    fi
-    [[ "$first" == "$second" ]] || { echo 'FEHLER: Passwörter stimmen nicht überein.' >&2; return 1; }
-    ((${#first} >= 12)) || { echo 'FEHLER: Bitte mindestens 12 Zeichen verwenden.' >&2; return 1; }
-    hash="$(php -r 'echo password_hash($argv[1], PASSWORD_DEFAULT);' "$first")"
-    [[ "$hash" == \$* ]] || { echo 'FEHLER: Passwort-Hash konnte nicht erstellt werden.' >&2; return 1; }
-    install -d -o root -g "$WEB_USER" -m 0750 "$(dirname "$SYSLOG_AUTH")"
-    printf "<?php\nreturn '%s';\n" "$hash" > "$SYSLOG_AUTH"
-    chown root:"$WEB_USER" "$SYSLOG_AUTH"
-    chmod 0640 "$SYSLOG_AUTH"
-    unset first second hash TK_SYSLOG_PASSWORD
-}
-
 patch_menu() {
     python3 - "$1" <<'PY'
 import pathlib, sys
@@ -144,15 +124,12 @@ PY
 install_files() {
     local dest owner
     install -d -o root -g root -m 0755 "$WEBROOT/api" "$WEBROOT/app/classes" "$WEBROOT/assets/js" "$WEBROOT/assets/css"
-    install -d -o "$WEB_USER" -g "$WEB_USER" -m 0700 "$(path /var/lib/tkgateway/syslog-auth-failures)"
     install -o root -g root -m 0644 "$REPO/public/syslog.php" "$WEBROOT/syslog.php"
-    install -o root -g root -m 0644 "$REPO/public/syslog-login.php" "$WEBROOT/syslog-login.php"
-    install -o root -g root -m 0644 "$REPO/public/syslog-logout.php" "$WEBROOT/syslog-logout.php"
     install -o root -g root -m 0644 "$REPO/public/api/syslog.php" "$WEBROOT/api/syslog.php"
-    install -o root -g root -m 0644 "$REPO/app/classes/SyslogAuth.php" "$WEBROOT/app/classes/SyslogAuth.php"
     install -o root -g root -m 0644 "$REPO/app/classes/SyslogDiagnose.php" "$WEBROOT/app/classes/SyslogDiagnose.php"
     install -o root -g root -m 0644 "$REPO/public/assets/js/syslog.js" "$WEBROOT/assets/js/syslog.js"
     install -o root -g root -m 0644 "$REPO/public/assets/css/syslog.css" "$WEBROOT/assets/css/syslog.css"
+    rm -f -- "$WEBROOT/syslog-login.php" "$WEBROOT/syslog-logout.php" "$WEBROOT/app/classes/SyslogAuth.php" "$SYSLOG_AUTH"
     patch_menu "$WEBROOT/includes/header.php"
     install -d -o root -g root -m 0755 "$SUDOERS_DIR"
     install -d -o root -g root -m 0755 "$LOCAL_SBIN"
@@ -242,7 +219,6 @@ EOF
     else
         echo 'Vorhandene fritzbox.log erkannt: bestehende Rsyslog-Empfangs- und Routingkonfiguration bleibt unverändert.'
     fi
-    set_password_if_needed
 }
 
 rollback() {
@@ -291,8 +267,9 @@ case "${1:---check}" in
         trap handle_install_error ERR
         install_files
         trap - ERR
-        echo 'Syslog & Fehlerdiagnose installiert. Keine Änderungen an Xray, VLESS, VPN-Konfiguration, Triple-WAN, Routing, Firewall oder Telefonie wurden vorgenommen.'
-        echo "Webseite: /syslog-login.php  |  Sicherung: $BACKUP"
+        echo 'Syslog & Fehlerdiagnose ohne Passwortanmeldung installiert. Die vorhandene Syslog-Datei blieb erhalten.'
+        echo 'Keine Änderungen an Xray, VLESS, VPN-Konfiguration, Triple-WAN, Routing, Firewall oder Telefonie wurden vorgenommen.'
+        echo "Webseite: /syslog.php  |  Sicherung: $BACKUP"
         ;;
     --rollback)
         [[ $EUID -eq 0 || -n "$TEST_ROOT" ]] || { echo 'FEHLER: Rollback benötigt root.' >&2; exit 1; }

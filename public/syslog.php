@@ -1,14 +1,10 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/../app/classes/SyslogAuth.php';
-SyslogAuth::requireLogin();
-$csrf = htmlspecialchars(SyslogAuth::csrfToken(), ENT_QUOTES, 'UTF-8');
 include __DIR__ . '/includes/header.php';
 ?>
 <link rel="stylesheet" href="/assets/css/syslog.css">
-<main class="syslog" data-csrf="<?= $csrf ?>">
+<main class="syslog">
   <header class="syslog-heading"><div><h1>Syslog &amp; Fehlerdiagnose</h1><p>Telefonie und Gateway-Meldungen verständlich erklärt. Aktualisierung alle fünf Sekunden.</p></div>
-    <form action="/syslog-logout.php" method="post"><input type="hidden" name="csrf" value="<?= $csrf ?>"><button class="secondary" type="submit">Abmelden</button></form>
   </header>
   <div class="syslog-toolbar card">
     <label>Suche <input id="search" type="search" placeholder="Gerät, MAC oder Meldung"></label>
@@ -17,7 +13,7 @@ include __DIR__ . '/includes/header.php';
     <label>Schweregrad <select id="severity"><option value="all">Alle</option><option value="error">Fehler</option><option value="warning">Warnungen</option><option value="info">Informationen</option></select></label>
     <label class="mode-toggle"><input id="expert" type="checkbox"> Expertenmodus</label>
   </div>
-  <div class="syslog-actions"><span id="updated">Wird geladen …</span><button id="pause" class="secondary" type="button">Live-Protokoll pausieren</button><a id="export" class="button" href="/api/syslog.php?export=csv">Protokoll geschützt exportieren</a></div>
+  <div class="syslog-actions"><span id="updated">Wird geladen …</span><button id="pause" class="secondary" type="button">Live-Protokoll pausieren</button><a id="export" class="button" href="/api/syslog.php?export=csv">Protokoll exportieren</a></div>
   <section class="syslog-counters" id="counters" aria-live="polite"></section>
   <section class="card"><h2>Gerätestatus</h2><div id="devices" class="device-grid"><p>Lade Gerätestatus …</p></div></section>
   <section class="card"><h2>Wiederkehrende Meldungen</h2><div id="repeated"><p>Keine Wiederholungen erkannt.</p></div></section>

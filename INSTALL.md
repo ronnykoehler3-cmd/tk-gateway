@@ -16,7 +16,7 @@ Zuerst den freigegebenen Feature-Branch im Repository auschecken und aktualisier
 cd /opt/tk-gateway && sudo bash scripts/install-syslog.sh --install
 ```
 
-Beim ersten Lauf fragt das Skript interaktiv nach einem selbst gewählten Syslog-Passwort (mindestens 12 Zeichen). Es gibt kein Standardpasswort. Bei einer Aktualisierung bleibt das bereits eingerichtete Passwort erhalten.
+Das Syslog-Modul verlangt kein eigenes Passwort. Die Ansicht und API sind für Geräte erreichbar, die das Gateway erreichen können; setze das Gateway daher nur in einem vertrauenswürdigen Netz ein. Die Fehlerbeschreibungen und Exporte maskieren erkannte SIP-Passwörter, Authorization-Header, Tokens und vergleichbare Zugangsdaten.
 
 Die Installation legt vor Änderungen eine Sicherung unter `/var/backups/tkgateway-syslog/` an. Sie ergänzt den Eintrag gezielt in der vorhandenen `includes/header.php`: existiert der Eintrag schon, bleibt die Menüdatei unangetastet. Die Repository-Version des Headers wird nicht blind über die Produktivdatei kopiert.
 
@@ -26,7 +26,7 @@ Die Telefonie- und vorhandene Watchdog-Logdatei erhalten ausschließlich für `w
 
 ## Nutzung
 
-Aufrufen: `https://<Gateway-Adresse>/syslog-login.php`. Die Ansicht aktualisiert sich alle fünf Sekunden und startet im Laienmodus. Sie durchsucht aktive und rotierte Protokolle, höchstens 2.000 Meldungen je Quelle. Nach fünf fehlgeschlagenen Passworteingaben wird der Zugang der betreffenden Quell-IP für 15 Minuten begrenzt. Der Expertenmodus zeigt technische Meldungen; SIP-Passwörter, Authorization-Header, Tokens und ähnliche Zugangsdaten werden auch dort und im CSV-Export maskiert. Der Export ist wie die Ansicht durch die Anmeldung geschützt.
+Aufrufen: `http://<Gateway-Adresse>/syslog.php`. Die Ansicht aktualisiert sich alle fünf Sekunden und startet im Laienmodus. Sie durchsucht aktive und rotierte Protokolle, höchstens 2.000 Meldungen je Quelle. Der Expertenmodus zeigt technische Meldungen; erkannte Zugangsdaten bleiben auch dort und im CSV-Export maskiert.
 
 Enthält das vorhandene Fritzbox-Log keine Absender-IP im Syslog-Kopf, zeigt die Diagnose „nicht im Log enthalten“ an. Sie leitet die Adresse nicht aus einer anderen Meldung ab. Das erkannte Telefon bzw. Gerät wird separat anhand von Modell, Hostname und MAC-Adresse dargestellt.
 
@@ -45,7 +45,6 @@ sudo bash /opt/tk-gateway/scripts/install-syslog.sh --rollback
 Die Regressionstests liegen unter `tests/`. Lokal können sie mit PHP 8.4, Bash und Node.js gestartet werden:
 
 ```bash
-php -l app/classes/SyslogAuth.php
 php -l app/classes/SyslogDiagnose.php
 php tests/test_syslog_parser.php
 php tests/test_syslog_access.php
