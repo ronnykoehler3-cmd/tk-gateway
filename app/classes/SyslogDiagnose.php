@@ -71,7 +71,7 @@ final class SyslogDiagnose
         if (preg_match('/\b([0-9a-f]{2}(?::[0-9a-f]{2}){5})\b/i', $line, $m)) {
             $mac = strtoupper($m[1]);
         }
-        if (preg_match('/\b(HT\s?-?841|HT\s?-?801|GRP\d{3,4}|GXP\d{3,4}|WP\d{3,4}|Fanvil\s+X\d+\w*|Yealink\s+T\d+\w*|FRITZ!?Box(?:\s+\d{3,4})?)\b/i', $line, $m)) {
+        if (preg_match('/\b(HT\s?-?841|HT\s?-?801|GRP\d{3,4}|GXP\d{3,4}|WP\d{3,4}|Fanvil\s+X\d+\w*|Yealink\s+T\d+\w*|FRITZ!?Box(?:\s+\d{3,4})?)\b/i', ($hostname ?? '') . ' ' . $line, $m)) {
             $model = preg_replace('/\s+/', ' ', strtoupper(str_replace('!', '', $m[1]))) ?: $m[1];
         }
 
