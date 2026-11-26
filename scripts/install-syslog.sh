@@ -212,14 +212,18 @@ EOF
 
     # Adopt an existing listener and logfile without duplicating it. Add a
     # dedicated UDP receiver only when the established log file does not exist.
-    if (( local_log_missing )); then
+    if (( local_log_missing )) && ! grep -RqsF -- "$LOGFILE" "$(path /etc/rsyslog.conf)" "$RSYSLOG_DIR" 2>/dev/null; then
+        local_rsyslog_changed=0
         install -d -o root -g root -m 0755 "$RSYSLOG_DIR"
-        if grep -RqsE 'UDPServerRun[[:space:]]+514|input[[:space:]]*\(.*imudp|imudp.*port[[:space:]]*=[[:space:]]*"?514' "$(path /etc/rsyslog.conf)" "$RSYSLOG_DIR" 2>/dev/null; then
+        if [[ -e "$RSYSLOG_DROPIN" ]]; then
+            echo 'Vorhandene Rsyslog-Drop-in-Datei erkannt: sie bleibt unverändert.'
+        elif grep -RqsE 'UDPServerRun[[:space:]]+514|input[[:space:]]*\(.*imudp|imudp.*port[[:space:]]*=[[:space:]]*"?514' "$(path /etc/rsyslog.conf)" "$RSYSLOG_DIR" 2>/dev/null; then
             cat > "$RSYSLOG_DROPIN" <<EOF
 if (\$fromhost-ip startswith '192.168.50.') then {
     action(type="omfile" file="$LOGFILE")
 }
 EOF
+            local_rsyslog_changed=1
         else
             cat > "$RSYSLOG_DROPIN" <<EOF
 module(load="imudp")
@@ -228,10 +232,13 @@ if (\$fromhost-ip startswith '192.168.50.') then {
     action(type="omfile" file="$LOGFILE")
 }
 EOF
+            local_rsyslog_changed=1
         fi
-        chmod 0644 "$RSYSLOG_DROPIN"
-        rsyslogd -N1 >/dev/null
-        [[ -n "$TEST_ROOT" ]] || systemctl reload rsyslog.service
+        if (( local_rsyslog_changed )); then
+            chmod 0644 "$RSYSLOG_DROPIN"
+            rsyslogd -N1 >/dev/null
+            [[ -n "$TEST_ROOT" ]] || systemctl reload rsyslog.service
+        fi
     else
         echo 'Vorhandene fritzbox.log erkannt: bestehende Rsyslog-Empfangs- und Routingkonfiguration bleibt unverändert.'
     fi

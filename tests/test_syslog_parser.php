@@ -9,8 +9,10 @@ function check(bool $ok, string $message): void
 
 $normalChallenge = SyslogDiagnose::parse('Nov 26 22:34:05 HT841 [ec:74:d7:d8:e2:16] SIP/2.0 401 Unauthorized', 'fritzbox');
 check($normalChallenge['severity'] === 'info', 'SIP 401 ohne fehlgeschlagene Registrierung muss normal sein');
-check($normalChallenge['model'] === 'HT 841', 'HT841-Modell muss erkannt werden');
+check($normalChallenge['model'] === 'HT841', 'HT841-Modell muss erkannt werden');
 check($normalChallenge['mac'] === 'EC:74:D7:D8:E2:16', 'MAC-Adresse muss erkannt werden');
+$proxyChallenge = SyslogDiagnose::parse('Nov 26 22:34:05 HT841 SIP/2.0 407 Proxy Authentication Required', 'fritzbox');
+check($proxyChallenge['severity'] === 'info', 'SIP 407 ohne fehlgeschlagene Registrierung muss normal sein');
 
 $ok = SyslogDiagnose::parse('Nov 26 22:34:06 192.168.50.200 SIP/2.0 200 OK', 'fritzbox');
 check($ok['severity'] === 'info' && str_contains($ok['advice'], 'beweist nicht'), 'SIP 200 OK darf nicht als Registrierungsbeweis gelten');
